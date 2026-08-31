@@ -1,30 +1,59 @@
-// prisma/schema.prisma
-
 generator client {
   provider               = "prisma-client"
   output                 = "../generated/prisma"
-  moduleFormat           = "esm"
   generatedFileExtension = "ts"
   importFileExtension    = "ts"
+  moduleFormat           = "esm"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        Int        @id @default(autoincrement())
+  nome      String
+  email     String     @unique
+  foto      String?
+  papel     Papel      @default(PROFESSOR)
+  createdAt DateTime   @default(now()) @map("data_criacao")
+  updatedAt DateTime   @updatedAt @map("data_atualizacao")
+  questions Question[]
+  subjects  Subject[]
+
+  @@map("users")
+}
+
+model Subject {
+  id          Int        @id @default(autoincrement())
+  nome        String
+  ativa       Boolean    @default(true)
+  professorId Int        @map("professor_id")
+  createdAt   DateTime   @default(now()) @map("data_criacao")
+  updatedAt   DateTime   @updatedAt @map("data_atualizacao")
+  questions   Question[]
+  professor   User       @relation(fields: [professorId], references: [id])
+
+  @@map("subjects")
+}
+
+model Question {
+  id              Int      @id @default(autoincrement())
+  enunciado       String
+  dificuldade     Int
+  respostaCorreta String?  @map("resposta_correta")
+  subjectId       Int      @map("disciplina_id")
+  authorId        Int      @map("autor_id")
+  ativa           Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("data_criacao")
+  updatedAt       DateTime @updatedAt @map("data_atualizacao")
+  author          User     @relation(fields: [authorId], references: [id])
+  subject         Subject  @relation(fields: [subjectId], references: [id])
+
+  @@map("questions")
+}
+
 enum Papel {
   PROFESSOR
   ADMIN
-}
-
-model User {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  email     String   @unique
-  foto      String?
-  papel     Papel    @default(PROFESSOR)
-  createdAt DateTime @default(now()) @map("data_criacao")
-  updatedAt DateTime @updatedAt @map("data_atualizacao")
-
-  @@map("users")
 }

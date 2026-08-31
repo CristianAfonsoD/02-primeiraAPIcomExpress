@@ -5,3 +5,5 @@ console.log(teste);
 function malFormatada() {
   return 'sem formatação';
 }
+
+console.log(malFormatada());

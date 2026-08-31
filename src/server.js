@@ -1,44 +1,23 @@
-import express from 'express';
+import "dotenv/config";
+import app from "./app.js";
+import prisma from "./config/database.js";
 
-const app = express();
+const PORT = Number(process.env.PORT) || 3000;
 
-const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, () => {
+  console.log("Servidor rodando na porta " + PORT);
+  console.log("Health check: http://localhost:" + PORT + "/health");
+  console.log("Usuários: http://localhost:" + PORT + "/users");
+});
 
-// Middleware para parsing JSON
-app.use(express.json());
+async function shutdown(signal) {
+  console.log("Recebido " + signal + ". Encerrando...");
 
-// Rota de health check
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    message: 'Minha primeira API com Express funcionando!',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
+  server.close(async () => {
+    await prisma.$disconnect();
+    process.exit(0);
   });
-});
+}
 
-// Rota básica para usuários
-app.get('/users', (req, res) => {
-  const usuarios = [
-    {
-      id: 1,
-      nome: 'Prof. Maria Silva',
-      email: 'maria@escola.com',
-      papel: 'PROFESSOR',
-      dataCriacao: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: 2,
-      nome: 'Admin João',
-      email: 'joao@escola.com',
-      papel: 'ADMIN',
-      dataCriacao: '2024-01-10T08:30:00Z',
-    },
-  ];
-
-  res.status(200).json(usuarios);
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
